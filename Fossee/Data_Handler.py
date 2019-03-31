@@ -1,8 +1,7 @@
-
 import csv
 import os
 import re
-from tkinter import filedialog,Tk
+from tkinter import filedialog, Tk
 from PIL import Image
 from PyQt5.QtWidgets import QMainWindow, QAction
 from matplotlib import pyplot as plt
@@ -11,95 +10,90 @@ import numpy as np
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
-
 from PyQt5 import QtCore, QtGui, QtWidgets, QtPrintSupport
 
 
-
 class PopUpPlotWindow(QtWidgets.QWidget):
-    def __init__(self, plotType,MyWindowObject):
+    def __init__(self, plotType, MyWindowObject):
         super().__init__()
 
-        #Layout Features for each Plot Window
-        self.setGeometry(50,50,650,550)
-        self.figure=plt.figure()
-        self.canvas=FigureCanvas(self.figure)
-        self.saveButton=QtWidgets.QPushButton("Save Image")
+        # Layout Features for each Plot Window
+        self.setGeometry(50, 50, 650, 550)
+        self.figure = plt.figure()
+        self.canvas = FigureCanvas(self.figure)
+        self.saveButton = QtWidgets.QPushButton("Save Image")
         self.saveButton.clicked.connect(self.saveImageAsPng)
-        self.layout=QtWidgets.QVBoxLayout()
+        self.layout = QtWidgets.QVBoxLayout()
         self.layout.addWidget(self.canvas)
         self.layout.addWidget(self.saveButton)
 
-        #Decides plot b/w x and y or y and x
-        self.rev=True
+        # Decides plot b/w x and y or y and x
+        self.rev = True
 
-
-        self.reverseButton=QtWidgets.QPushButton("Reverse")
-        if plotType==1:
+        self.reverseButton = QtWidgets.QPushButton("Reverse")
+        if plotType == 1:
             self.reverseButton.clicked.connect(self.saveReversedValue1)
-        if plotType==2:
+        if plotType == 2:
             self.reverseButton.clicked.connect(self.saveReversedValue2)
-        if plotType==3:
+        if plotType == 3:
             self.reverseButton.clicked.connect(self.saveReversedValue3)
 
         self.layout.addWidget(self.reverseButton)
         self.setLayout(self.layout)
 
-        self.fileInstance=MyWindowObject
+        self.fileInstance = MyWindowObject
 
+        if plotType == 1:
+            self.plotScatterPoints(self.fileInstance, self.rev)
+        if plotType == 2:
+            self.plotScatterPointsWithLines(self.fileInstance, self.rev)
+        if plotType == 3:
+            self.plotLines(self.fileInstance, self.rev)
 
-        if plotType==1:
-            self.plotScatterPoints(self.fileInstance,self.rev)
-        if plotType==2:
-            self.plotScatterPointsWithLines(self.fileInstance,self.rev)
-        if plotType==3:
-            self.plotLines(self.fileInstance,self.rev)
     def saveReversedValue1(self):
 
-        self.rev=self.reversePlot(self.rev)
+        self.rev = self.reversePlot(self.rev)
         self.plotScatterPoints(self.fileInstance, self.rev)
-
 
     def saveReversedValue2(self):
 
-        self.rev=self.reversePlot(self.rev)
+        self.rev = self.reversePlot(self.rev)
         self.plotScatterPointsWithLines(self.fileInstance, self.rev)
 
     def saveReversedValue3(self):
 
-        self.rev=self.reversePlot(self.rev)
+        self.rev = self.reversePlot(self.rev)
         self.plotLines(self.fileInstance, self.rev)
 
     def saveImageAsPng(self):
         im = Image.open('plot.png')
-        window=Tk()
+        window = Tk()
         window.withdraw()
         file = filedialog.asksaveasfilename(defaultextension=".png",
                                             filetypes=(("PNG file", "*.png"), ("All Files", "*.*")))
         if file:
             im.save(file)
 
+    def plotScatterPoints(self, fileInstance, reverse):
 
-
-    def plotScatterPoints(self, fileInstance,reverse):
-
-        if len(fileInstance.selectedColumns())!=2:
-            QtWidgets.QMessageBox.about(self,"ERROR","Invalid No. Of Arguments")
+        if len(fileInstance.selectedColumns()) != 2:
+            QtWidgets.QMessageBox.about(self, "ERROR", "Invalid No. Of Arguments")
             return -999
 
         self.figure.clf()
-        f = open(fileInstance.fileName, 'r',errors='ignore')
+        f = open(fileInstance.fileName, 'r', errors='ignore')
 
         reader = csv.reader(f)
         style.use('ggplot')
 
         # field names
-        header=next(reader)
+        header = next(reader)
         year = []
         value = []
         for row in reader:
 
-            if bool(re.match('^[0-9\.\- ]*$',row[fileInstance.selectedColumns()[0]])) and bool(re.match('^[0-9\.\- ]*$',row[fileInstance.selectedColumns()[1]])):
+            if bool(re.match('^[0-9\.\- ]*$', row[fileInstance.selectedColumns()[0]])) and bool(
+                    re.match('^[0-9\.\- ]*$', row[fileInstance.selectedColumns()[1]])):
                 year.append(float(row[fileInstance.selectedColumns()[0]]))
                 value.append(float(row[fileInstance.selectedColumns()[1]]))
             else:
@@ -108,10 +102,9 @@ class PopUpPlotWindow(QtWidgets.QWidget):
 
         ax = self.figure.add_subplot(111)
 
-
         # plot data
         colors = [0, 0, 0]
-        if(reverse):
+        if (reverse):
 
             ax.scatter(year, value, s=np.pi * 3 * 2, c=colors, alpha=0.5, marker='*')
             ax.set_xlabel(header[fileInstance.selectedColumns()[0]])
@@ -123,7 +116,6 @@ class PopUpPlotWindow(QtWidgets.QWidget):
 
         ax.set_title("Subplot 1:Scatter Point Diagram")
 
-
         self.figure.savefig("plot.png")
 
         # refresh canvas
@@ -131,20 +123,18 @@ class PopUpPlotWindow(QtWidgets.QWidget):
 
         return +999
 
+    def plotScatterPointsWithLines(self, fileInstance, reverse):
 
-
-    def plotScatterPointsWithLines(self, fileInstance,reverse):
-
-        if len(fileInstance.selectedColumns())!=2:
-            QtWidgets.QMessageBox.about(self,"ERROR","Invalid No. Of Arguments")
+        if len(fileInstance.selectedColumns()) != 2:
+            QtWidgets.QMessageBox.about(self, "ERROR", "Invalid No. Of Arguments")
             return -999
 
         self.figure.clf()
 
-        f = open(fileInstance.fileName, 'r',errors='ignore')
+        f = open(fileInstance.fileName, 'r', errors='ignore')
         reader = csv.reader(f)
 
-        header=next(reader)
+        header = next(reader)
         style.use('ggplot')
 
         # field names
@@ -152,7 +142,8 @@ class PopUpPlotWindow(QtWidgets.QWidget):
         value = []
         for row in reader:
 
-            if bool(re.match('^[0-9\.\- ]*$',row[fileInstance.selectedColumns()[0]])) and bool(re.match('^[0-9\.\- ]*$',row[fileInstance.selectedColumns()[1]])):
+            if bool(re.match('^[0-9\.\- ]*$', row[fileInstance.selectedColumns()[0]])) and bool(
+                    re.match('^[0-9\.\- ]*$', row[fileInstance.selectedColumns()[1]])):
                 year.append(float(row[fileInstance.selectedColumns()[0]]))
                 value.append(float(row[fileInstance.selectedColumns()[1]]))
             else:
@@ -162,7 +153,7 @@ class PopUpPlotWindow(QtWidgets.QWidget):
         ax = self.figure.add_subplot(111)
 
         # plot data
-        if(reverse):
+        if (reverse):
 
             ax.plot(year, value, '*-')
 
@@ -176,51 +167,43 @@ class PopUpPlotWindow(QtWidgets.QWidget):
 
         ax.set_title("Subplot 2:Scatter Point Diagram With Smooth Lines")
 
-
         # refresh canvas
         self.canvas.draw()
         self.figure.savefig("plot.png")
         return +999
 
+    def plotLines(self, fileInstance, reverse):
 
-
-    def plotLines(self, fileInstance,reverse):
-
-        if len(fileInstance.selectedColumns())!=2:
-
-            QtWidgets.QMessageBox.about(self,"ERROR","Invalid No. Of Arguments")
+        if len(fileInstance.selectedColumns()) != 2:
+            QtWidgets.QMessageBox.about(self, "ERROR", "Invalid No. Of Arguments")
             return -999
-
 
         self.figure.clf()
 
-        f = open(fileInstance.fileName, 'r',errors='ignore')
+        f = open(fileInstance.fileName, 'r', errors='ignore')
         reader = csv.reader(f)
         style.use('ggplot')
 
         # field names
         header = next(reader)
 
-
-
         year = []
         value = []
 
-
         for row in reader:
 
-            if bool(re.match('^[0-9\.\- ]*$',row[fileInstance.selectedColumns()[0]])) and bool(re.match('^[0-9\.\- ]*$',row[fileInstance.selectedColumns()[1]])):
+            if bool(re.match('^[0-9\.\- ]*$', row[fileInstance.selectedColumns()[0]])) and bool(
+                    re.match('^[0-9\.\- ]*$', row[fileInstance.selectedColumns()[1]])):
                 year.append(float(row[fileInstance.selectedColumns()[0]]))
                 value.append(float(row[fileInstance.selectedColumns()[1]]))
             else:
                 QtWidgets.QMessageBox.about(self, "ERROR", "Invalid Data")
                 return -999
 
-
         ax = self.figure.add_subplot(111)
 
         # plot data
-        if(reverse):
+        if (reverse):
             ax.plot(year, value)
             ax.set_ylabel(header[fileInstance.selectedColumns()[0]])
             ax.set_xlabel(header[fileInstance.selectedColumns()[1]])
@@ -236,18 +219,11 @@ class PopUpPlotWindow(QtWidgets.QWidget):
 
         return +999
 
-    def reversePlot(self,type):
-        if(type):
+    def reversePlot(self, type):
+        if (type):
             return False
         else:
             return True
-
-
-
-
-
-
-
 
 
 class MyWindow(QtWidgets.QWidget):
@@ -258,23 +234,19 @@ class MyWindow(QtWidgets.QWidget):
         self.fname = ""
         self.model = QtGui.QStandardItemModel(self)
 
-
-
-
-        self.figure2=plt.figure()
-        self.figure3=plt.figure()
-        self.figure4=plt.figure()
+        self.figure2 = plt.figure()
+        self.figure3 = plt.figure()
+        self.figure4 = plt.figure()
 
         self.label2 = QtWidgets.QLabel("SELECT COLUMNS TO BE PLOTTED :")
 
         self.tableView = QtWidgets.QTableView(self)
 
-
-        #to stop from editing
+        # to stop from editing
         self.tableView.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
 
-        self.label=QtWidgets.QLabel("PLOT :")
-        myfont=QtGui.QFont()
+        self.label = QtWidgets.QLabel("PLOT :")
+        myfont = QtGui.QFont()
         myfont.setBold(True)
 
         self.label.setFont(myfont)
@@ -286,7 +258,6 @@ class MyWindow(QtWidgets.QWidget):
         self.pushButton3 = QtWidgets.QPushButton("Scatter Points with smooth lines")
 
         self.pushButton4 = QtWidgets.QPushButton("Lines")
-
 
         self.tableView.setModel(self.model)
         self.tableView.horizontalHeader().setStretchLastSection(True)
@@ -313,46 +284,38 @@ class MyWindow(QtWidgets.QWidget):
         self.pushButton3.clicked.connect(self.openPlot2Window)
         self.pushButton4.clicked.connect(self.openPlot3Window)
 
-
         grid = QtWidgets.QGridLayout()
         grid.setSpacing(9)
 
-
-
         grid.addWidget(self.label2)
         grid.addWidget(self.tableView, 1, 0, 1, 9)
-        ground=10
-        grid.addWidget(self.pushDeleteRow,ground,1)
-        grid.addWidget(self.pushDeleteColumn,ground,2)
-        grid.addWidget(self.pushClear,ground,0)
-        grid.addWidget(self.label,ground,5)
-        grid.addWidget(self.pushButton2,ground,6)
-        grid.addWidget(self.pushButton3,ground,7)
-        grid.addWidget(self.pushButton4,ground,8)
+        ground = 10
+        grid.addWidget(self.pushDeleteRow, ground, 1)
+        grid.addWidget(self.pushDeleteColumn, ground, 2)
+        grid.addWidget(self.pushClear, ground, 0)
+        grid.addWidget(self.label, ground, 5)
+        grid.addWidget(self.pushButton2, ground, 6)
+        grid.addWidget(self.pushButton3, ground, 7)
+        grid.addWidget(self.pushButton4, ground, 8)
 
         self.setLayout(grid)
-
 
         item = QtGui.QStandardItem()
         self.model.appendRow(item)
         self.model.setData(self.model.index(0, 0), "", 0)
         self.tableView.resizeColumnsToContents()
 
-
-        #Selection of columns
+        # Selection of columns
         self.selectionModel = self.tableView.selectionModel()
-
 
     def saveImageAsPng(self):
         im = Image.open('plot.png')
-        window=Tk()
+        window = Tk()
         window.withdraw()
         file = filedialog.asksaveasfilename(defaultextension=".png",
                                             filetypes=(("PNG file", "*.png"), ("All Files", "*.*")))
         if file:
             im.save(file)
-
-
 
     def plotScatterPointsSave(self, fileName):
 
@@ -369,7 +332,8 @@ class MyWindow(QtWidgets.QWidget):
         year = []
         value = []
         for row in reader:
-            if bool(re.match('^[0-9\.\- ]*$',row[self.selectedColumns()[0]])):
+            if bool(re.match('^[0-9\.\- ]*$', row[self.selectedColumns()[0]])) and bool(
+                    re.match('^[0-9\.\- ]*$', row[self.selectedColumns()[1]])):
                 year.append(float(row[self.selectedColumns()[0]]))
                 value.append(float(row[self.selectedColumns()[1]]))
             else:
@@ -387,7 +351,6 @@ class MyWindow(QtWidgets.QWidget):
         self.figure2.savefig("plot.png")
         self.saveImageAsPng()
 
-
     def plotScatterPointsWithLinesSave(self, fileName):
         self.label.setVisible(False)
         if len(self.selectedColumns()) != 2:
@@ -404,7 +367,8 @@ class MyWindow(QtWidgets.QWidget):
         year = []
         value = []
         for row in reader:
-            if bool(re.match('^[0-9\.\- ]*$',row[self.selectedColumns()[0]])):
+            if bool(re.match('^[0-9\.\- ]*$', row[self.selectedColumns()[0]])) and bool(
+                    re.match('^[0-9\.\- ]*$', row[self.selectedColumns()[1]])):
                 year.append(float(row[self.selectedColumns()[0]]))
                 value.append(float(row[self.selectedColumns()[1]]))
             else:
@@ -438,7 +402,8 @@ class MyWindow(QtWidgets.QWidget):
         year = []
         value = []
         for row in reader:
-            if bool(re.match('^[0-9\.\- ]*$',row[self.selectedColumns()[0]])):
+            if bool(re.match('^[0-9\.\- ]*$', row[self.selectedColumns()[0]])) and bool(
+                    re.match('^[0-9\.\- ]*$', row[self.selectedColumns()[1]])):
                 year.append(float(row[self.selectedColumns()[0]]))
                 value.append(float(row[self.selectedColumns()[1]]))
             else:
@@ -456,48 +421,44 @@ class MyWindow(QtWidgets.QWidget):
 
         self.saveImageAsPng()
 
-
-
-
     def openPlot1Window(self):
-        self.plot1=PopUpPlotWindow(1,self)
-        if(self.plot1.plotScatterPoints(self,self.plot1.rev)>0):
+        self.plot1 = PopUpPlotWindow(1, self)
+        if (self.plot1.plotScatterPoints(self, self.plot1.rev) > 0):
             self.plot1.show()
 
     def openPlot2Window(self):
         self.plot2 = PopUpPlotWindow(2, self)
-        if (self.plot2.plotScatterPointsWithLines(self,self.plot2.rev) > 0):
+        if (self.plot2.plotScatterPointsWithLines(self, self.plot2.rev) > 0):
             self.plot2.show()
 
     def openPlot3Window(self):
         self.plot3 = PopUpPlotWindow(3, self)
-        if (self.plot3.plotLines(self,self.plot3.rev) > 0):
+        if (self.plot3.plotLines(self, self.plot3.rev) > 0):
             self.plot3.show()
 
+        # selected columns
 
-        #selected columns
     def selectedColumns(self):
         indexes = self.selectionModel.selectedIndexes()
-        index_columns=[]
+        index_columns = []
         for index in indexes:
             index_columns.append(index.column())
-        index_columns=list(set(index_columns))
+        index_columns = list(set(index_columns))
         return index_columns
-
 
     def loadCsv(self, fileName):
         fileName, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Open CSV",
                                                             (QtCore.QDir.homePath()), "CSV (*.csv *.tsv)")
-        self.fileName=fileName
+        self.fileName = fileName
         if fileName:
             print(fileName)
-            ff = open(fileName, 'r',newline='',errors='ignore')
-            lines=[line for line in ff]
+            ff = open(fileName, 'r', newline='', errors='ignore')
+            lines = [line for line in ff]
             print(lines[0].strip().split(','))
             mytext = ff.read()
             #            print(mytext)
             ff.close()
-            f = open(fileName, 'r',errors='ignore')
+            f = open(fileName, 'r', errors='ignore')
             with f:
                 self.fname = os.path.splitext(str(fileName))[0].split("/")[-1]
                 self.setWindowTitle(self.fname)
@@ -505,10 +466,9 @@ class MyWindow(QtWidgets.QWidget):
                     reader = csv.reader(f)
                     self.model.clear()
                     for row in reader:
-
                         items = [QtGui.QStandardItem(field) for field in row]
                         self.model.appendRow(items)
-                        
+
                     self.tableView.resizeColumnsToContents()
                 else:
                     reader = csv.reader(f, delimiter=';')
@@ -531,9 +491,9 @@ class MyWindow(QtWidgets.QWidget):
                                                             "CSV Files (*.csv)")
         if fileName:
             print(fileName)
-            f = open(fileName, 'w',newline='')
+            f = open(fileName, 'w', newline='')
             with f:
-                writer = csv.writer(f,delimiter=',')
+                writer = csv.writer(f, delimiter=',')
                 for rowNumber in range(self.model.rowCount()):
                     fields = [self.model.data(self.model.index(rowNumber, columnNumber),
                                               QtCore.Qt.DisplayRole)
@@ -668,7 +628,6 @@ class MyWindow(QtWidgets.QWidget):
                 clip.setText(myitem.text())
                 myitem.setText("")
 
-
     def Edit(self):
         self.tableView.setEditTriggers(QtWidgets.QAbstractItemView.DoubleClicked)
 
@@ -702,7 +661,6 @@ class Writer(QMainWindow):
         save_1 = QAction('&Save_Scatter_Point', self)
         save_2 = QAction('&Save_Scatter_Point_Lines', self)
         save_3 = QAction('&Save_Lines', self)
-
 
         edit_action = QAction('&Edit by double click', self)
         addrow_action = QAction('&Add row', self)
@@ -758,6 +716,7 @@ class Writer(QMainWindow):
         if signal == '&Edit by double click':
             self.form_widget.Edit()
 
+
 if __name__ == "__main__":
     import sys
 
@@ -765,7 +724,7 @@ if __name__ == "__main__":
     app.setApplicationName('Data Handler And Plotter')
     main = Writer()
     main.setMinimumSize(700, 300)
-    main.setGeometry(20, 20, 800,700)
+    main.setGeometry(20, 20, 800, 700)
     main.setWindowTitle("Data Window")
     main.show()
 
